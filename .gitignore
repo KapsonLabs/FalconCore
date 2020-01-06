@@ -1,0 +1,4 @@
+falcon_env/
+__pycache__
+*.py
+.vscode
