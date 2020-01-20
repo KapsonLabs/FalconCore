@@ -8,7 +8,6 @@ class Branch(models.Model):
     branch_name         =   models.CharField(max_length=250)    
     branch_location     =   models.CharField(max_length=250)
     branch_description  =   models.TextField(null=True, blank=True)
-    branch_manager      =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='branch_manager')
     created_by          =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='branch_creator')
     created_on          =   models.DateTimeField(auto_now_add=True)
 
@@ -54,6 +53,7 @@ class Client(models.Model):
         return "{} belongs to {} branch".format(self.first_name, self.client_branch.branch_name)
 
 class ClientBackgroundInformation(models.Model):
+    related_client        =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_portfolio')
     outstanding_portfolio       =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     portfolio_at_risk           =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     operating_cost_ratio        =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
