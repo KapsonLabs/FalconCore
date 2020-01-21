@@ -21,7 +21,7 @@ class UserDetails(models.Model):
     role_description    =   models.TextField(null=True, blank=True)
     current_branch      =   models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='current_branch')
     previous_branch     =   models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='previous_branch')
-    transfered_on       =   models.DateTimeField(auto_now_add=False, null=False, blank=False)
+    transfered_on       =   models.DateTimeField(auto_now_add=False, null=True, blank=True)
     assigned_on         =   models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -34,7 +34,6 @@ class Client(models.Model):
     client_branch       =   models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_branch')
     registration_date   =   models.DateField(null=True, blank=True)
     sex                 =   models.CharField(max_length=12, null=True, blank=True)
-    phone_number        =   models.CharField(max_length=12) 
     address             =   models.CharField(max_length=50, null=True, blank=True)
     area_parish         =   models.CharField(max_length=50, null=True, blank=True)
     area_village        =   models.CharField(max_length=50, null=True, blank=True)
@@ -64,6 +63,7 @@ class ClientBackgroundInformation(models.Model):
 class Group(models.Model):
     group_name          =   models.CharField(max_length=250) 
     related_branch      =   models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='group_branch')
+    group_type          =   models.IntegerField(null=True, blank=True)
     created_on          =   models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

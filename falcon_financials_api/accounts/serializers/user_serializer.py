@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'phone_number')
+        fields = ('id', 'first_name', 'last_name', 'username', 'email', 'password', 'phone_number')
 
 
 class UserShortDetailsSerializer(serializers.ModelSerializer):
@@ -36,6 +36,12 @@ class UserShortDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDetails
         fields = ('id', 'related_user', 'role', 'assigned_on')
+
+
+class UserDetailsSaveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDetails
+        fields = ('related_user', 'role', 'role_description', 'current_branch', 'previous_branch')
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import permissions
 
 from ..models import User, UserDetails
-from ..serializers.user_serializer import UserDetailsSerializer, UserCreateSerializer, UserShortDetailsSerializer
+from ..serializers.user_serializer import UserDetailsSerializer, UserCreateSerializer, UserShortDetailsSerializer, UserDetailsSaveSerializer, UserSerializer
 
 
 class UserListView(APIView):
@@ -20,16 +20,33 @@ class UserListView(APIView):
         return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
-        serializer = BranchCreateSerializer(data=request.data)
+        serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
-            branch_data = {
-                'branch_name':serializer.data['branch_name'],
-                'branch_location':serializer.data['branch_location'],
-                'branch_description':serializer.data['branch_description'],
+            #create user instance first
+            user_data = {
+                'username':serializer.data['username'],
+                'first_name':serializer.data['first_name'],
+                'last_name':serializer.data['last_name'],
+                'email':serializer.data['email'],
+                'password':serializer.data['password'],
+                'phone_number':serializer.data['phone_number'],
             }
 
-            branch_creation = BranchSaveSerializer(data=branch_data)
-            branch_creation.is_valid(raise_exception=True)
-            branch_creation.save(created_by=request.user)
-            return Response({"status":201, "data":branch_creation.data}, status=status.HTTP_201_CREATED)
+            user_creation = UserSerializer(data=user_data)
+            user_creation.is_valid(raise_exception=True)
+            user_creation.save()
+
+            user_meta_data = {
+                'related_user':user_creation.data['id'],
+                'role':serializer.data['role'],
+                'role_description':serializer.data['role_description'],
+                'current_branch':serializer.data['current_branch'],
+                'previous_branch':serializer.data['current_branch'],
+            }
+
+
+            user_meta_creation = UserDetailsSaveSerializer(data=user_meta_data)
+            user_meta_creation.is_valid(raise_exception=True)
+            user_meta_creation.save(created_by=request.user)
+            return Response({"status":201, "data":user_meta_creation.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
