@@ -53,7 +53,7 @@ class SavingsDeposits(models.Model):
     date_deposited          =   models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "{} deposited on {} ".format(self.amount_deposited, self.related_savings_account.related_subscription.account_number)
+        return "{} deposited on {} ".format(self.amount_deposited, self.related_savings_account.related_savings_subscription.account_number)
 
 class SavingsWithdrawal(models.Model):
     related_savings_account_withdrawal  =   models.ForeignKey(Savings, on_delete=models.CASCADE, related_name="related_savings_account_withdraw")

@@ -9,6 +9,8 @@ from ..serializers.product_serializer import ProductCreateSerializer, ProductDet
 
 from ..serializers.savings_serializer import SavingsCreateSerializer
 
+from ..helpers.account_management import create_account_number
+
 class ProductListView(APIView):
     """
     List all products and create a product.
@@ -52,7 +54,7 @@ class ProductSubscriptionListView(APIView):
                 product_subscription_data = {
                         'related_product_subscription': pk,
                         'related_client_subscription': serializer.data['related_client'],
-                        'account_number': 'A001'
+                        'account_number': create_account_number()
                     }
 
                 product_subscription_creation = ProductSubscriptionSaveSerializer(data=product_subscription_data)
