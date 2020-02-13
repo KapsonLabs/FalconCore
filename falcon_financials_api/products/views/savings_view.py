@@ -1,0 +1,82 @@
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions
+from django.db.models import Q, F
+
+from ..models import Product, ProductSubscriptions, ProductFeesLevied, Savings, SavingsDeposits, SavingsWithdrawal
+from ..serializers.savings_serializer import SavingsDepositAndWithdrawCreateSerializer, SavingsDepositSaveSerializer, SavingsWithdrawSaveSerializer, SavingsHistorySerializer
+
+from ..serializers.savings_serializer import SavingsCreateSerializer
+
+class SavingDepositListView(APIView):
+    """
+    List all savings deposits and create a savings deposit.
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    # def get(self, request, format=None):
+    #     product_subscribed_to = 
+    #     serializer = SavingsDepositSaveSerializer(Product.objects.all(), many=True)
+    #     return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request, format=None):
+        serializer = SavingsDepositAndWithdrawCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            product_subscribed_to = ProductSubscriptions.objects.get(account_number=serializer.data['account_number'])
+
+            if(product_subscribed_to.related_product_subscription.product_category==0):
+                savings_account = Savings.objects.get(related_savings_subscription=product_subscribed_to.pk)
+
+                savings_deposit_data = {
+                    'related_savings_account':savings_account.pk,
+                    'amount_deposited':serializer.data['amount'],
+                    'fee_charged':0,
+                    'deposit_method':0,
+                    'deposit_received_by':request.user.pk,
+                    'deposit_cleared_by':request.user.pk
+                }
+
+                savings_deposit_creation = SavingsDepositSaveSerializer(data=savings_deposit_data)
+                savings_deposit_creation.is_valid(raise_exception=True)
+                savings_deposit_creation.save()
+
+                #update savings amount
+                savings_account.account_balance = F('account_balance') + float(serializer.data['amount'])
+                savings_account.save()
+
+                return Response({"status":201, "data": savings_deposit_creation.data}, status=status.HTTP_201_CREATED)
+
+            else:
+                pass
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class SavingHistoryListView(APIView):
+    """
+    List all savings deposits and create a savings deposit.
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def post(self, request, format=None):
+        serializer = SavingsHistorySerializer(data=request.data)
+        if serializer.is_valid():
+            product_subscribed_to = ProductSubscriptions.objects.get(account_number=serializer.data['account_number'])
+
+            if(product_subscribed_to.related_product_subscription.product_category==0):
+                savings_account = Savings.objects.get(related_savings_subscription=product_subscribed_to.pk)
+
+                if(serializer.data['method'] == 0):
+                    pass
+
+                if(serializer.data['method'] == 1):
+                    pass
+
+                if(serializer.data['method'] == 2):
+
+                    return Response({"status":200, "data": savings_account.account_balance}, status=status.HTTP_200_OK)
+
+            
+            return Response({"status":404, "error":"savings account not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
