@@ -49,7 +49,7 @@ class Client(models.Model):
     added_on            =   models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "{} belongs to {} branch".format(self.first_name, self.client_branch.branch_name)
+        return "{} belongs to {} branch".format(self.related_user.first_name, self.client_branch.branch_name)
 
 class ClientBackgroundInformation(models.Model):
     related_client        =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_portfolio')
