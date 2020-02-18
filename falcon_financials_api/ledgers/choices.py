@@ -1,0 +1,11 @@
+CATEGORY_CLASS=(
+    ("ASSETS", "ASSETS"),
+    ("LIABILITIES", "LIABILITIES"),
+    ("INCOME", "INCOME"),
+    ("EXPENDITURE", "EXPENDITURE"),
+)
+
+LEDGER_ENTRY_TYPE=(
+    ("CR", "CR"),
+    ("DR", "DR")
+)

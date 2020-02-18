@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import User, Client
+from .choices import PAYMENT_PERIOD
 
 class Product(models.Model):
     product_name            =   models.CharField(max_length=250) 
@@ -72,8 +73,10 @@ class Loans(models.Model):
     related_loan_subscription    =   models.ForeignKey(ProductSubscriptions, on_delete=models.CASCADE, related_name="related_loan_product_subscription")
     loan_amount                  =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     loan_received_by             =   models.ForeignKey(User, on_delete=models.CASCADE, related_name="laons_deposit_receiver")
-    loan_cleared_by              =   models.ForeignKey(User, on_delete=models.CASCADE, related_name="loans_deposit_receiver")     
+    loan_cleared_by              =   models.ForeignKey(User, on_delete=models.CASCADE, related_name="loans_deposit_clearer", null=True, blank=True)     
     status                       =   models.IntegerField()   #0-unapproved 1-cleared 2-declined
+    payment_duration             =   models.IntegerField()
+    payment_period               =   models.CharField(max_length=10, choices=PAYMENT_PERIOD)
     date_cleared                 =   models.DateTimeField(auto_now_add=False, blank=True, null=True)
     date_declined                =   models.DateTimeField(auto_now_add=False, blank=True, null=True) 
     date_requested               =   models.DateTimeField(auto_now_add=True)
