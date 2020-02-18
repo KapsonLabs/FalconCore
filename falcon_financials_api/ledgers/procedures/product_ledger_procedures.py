@@ -22,9 +22,9 @@ class ProductLedgerProcedure:
         except: 
             return "Error"
 
-    def get_product_ledger(self, serializer, product_id):
-        try:
-            transactions = serializer(self.ProductLedger.objects.all(), many=True)
-            return transactions
-        except:
-            pass
+    # def get_product_ledger(self, serializer, product_id):
+    #     try:
+    #         transactions = serializer(self.ProductLedger.objects.all(), many=True)
+    #         return transactions
+    #     except:
+    #         pass

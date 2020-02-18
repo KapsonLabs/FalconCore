@@ -46,7 +46,7 @@ class ChartLevelLedger(models.Model):
 
 
 class TrialBalanceLedger(models.Model):
-    related_trial_transaction   =   models.ForeignKey(ProductSubscriptions, on_delete=models.CASCADE, related_name="related_transaction_trial_balance")
+    related_trial_transaction   =   models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name="related_transaction_trial_balance")
     ledger_entry_type           =   models.CharField(max_length=250, choices=LEDGER_ENTRY_TYPE)
     amount                      =   models.DecimalField(max_digits=20, decimal_places=2, default=0)   
     date_entered                =   models.DateTimeField(auto_now_add=True)

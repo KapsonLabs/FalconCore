@@ -4,6 +4,9 @@ import random
 from ..models import Transaction
 from ..serializers.transaction_seriaizer import TransactionCreateSerializer 
 
+from .product_ledger_procedures import ProductLedgerProcedure
+from .trial_balance_ledger_procedure import TrialBalanceLedgerProcedure
+
 class TransactionProcedure:
 
     @staticmethod
@@ -26,6 +29,17 @@ class TransactionProcedure:
             transaction_creation = TransactionCreateSerializer(data=transaction_data)
             transaction_creation.is_valid(raise_exception=True)
             transaction_creation.save()
+
+            #create the required ledger entry
+            if transaction_category==0:
+                ledger = ProductLedgerProcedure.create_product_ledger(self, transaction_creation.data['id'], 'DR', transaction_amount)
+                trial_balance = TrialBalanceLedgerProcedure.create_trial_balance(self, transaction_creation.data['id'], 'CR', transaction_amount)
+                print(trial_balance)
+
+            if transaction_category==1:
+                ledger = ProductLedgerProcedure.create_product_ledger(self, transaction_creation.data['id'], 'CR', transaction_amount)
+                trial_balance = TrialBalanceLedgerProcedure.create_trial_balance(self, transaction_creation.data['id'], 'DR', transaction_amount)
+
             return transaction_creation.data
         except: 
             return "Error"

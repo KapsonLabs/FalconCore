@@ -2,7 +2,7 @@ import uuid
 import random
 
 from ..models import TrialBalanceLedger
-from ..serializers.trial_balance_serializer import TrialBalanceLedger
+from ..serializers.trial_balance_serializer import TrialBalanceCreateSerializer
 
 class TrialBalanceLedgerProcedure:
 
@@ -10,12 +10,12 @@ class TrialBalanceLedgerProcedure:
         try:
 
             trial_balance_data = {
-                'related_ledger_transaction': related_ledger_transaction,
+                'related_trial_transaction': related_ledger_transaction,
                 'ledger_entry_type':ledger_entry_type,
                 'amount':amount
             }
 
-            trial_balance_creation = TrialBalanceLedger(data=ledger_data)
+            trial_balance_creation = TrialBalanceCreateSerializer(data=trial_balance_data)
             trial_balance_creation.is_valid(raise_exception=True)
             trial_balance_creation.save()
             return trial_balance_creation.data

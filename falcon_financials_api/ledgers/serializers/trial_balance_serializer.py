@@ -9,4 +9,4 @@ class TrialBalanceCreateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = TrialBalanceLedger
-        fields = ('related_ledger_transaction', 'ledger_entry_type', 'amount')
+        fields = ('related_trial_transaction', 'ledger_entry_type', 'amount')
