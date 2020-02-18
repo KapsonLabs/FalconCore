@@ -9,6 +9,10 @@ from ..serializers.savings_serializer import SavingsDepositAndWithdrawCreateSeri
 
 from ..serializers.savings_serializer import SavingsCreateSerializer
 
+from ledgers.procedures.transaction_procedures import TransactionProcedure
+
+
+
 class SavingDepositListView(APIView):
     """
     List all savings deposits and create a savings deposit.
@@ -41,11 +45,23 @@ class SavingDepositListView(APIView):
                 savings_deposit_creation.is_valid(raise_exception=True)
                 savings_deposit_creation.save()
 
+                #create the transaction.
+                transaction_data = {
+                    'transaction_related_product':product_subscribed_to.pk,
+                    'transaction_category':1,
+                    'transaction_amount':serializer.data['amount'],
+                    'transaction_cleared_by':request.user.pk,
+                    'transaction_completed_by':request.user.pk
+                }
+
+                transation = TransactionProcedure.create_transaction(self, product_subscribed_to.pk, 1, serializer.data['amount'], request.user.pk, request.user.pk)
+                
+
                 #update savings amount
                 savings_account.account_balance = F('account_balance') + float(serializer.data['amount'])
                 savings_account.save()
 
-                return Response({"status":201, "data": savings_deposit_creation.data}, status=status.HTTP_201_CREATED)
+                return Response({"status":201, "data": {"details":savings_deposit_creation.data, "transaction_id":transation['transaction_id']}}, status=status.HTTP_201_CREATED)
 
             else:
                 pass
