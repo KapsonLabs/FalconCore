@@ -1,4 +1,5 @@
 from accounts.models import User
+import random
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -8,6 +9,12 @@ from rest_framework import permissions
 from ..models import User, Client
 from ..serializers.user_serializer import UserSerializer
 from ..serializers.client_serializer import ClientCreateSerializer, ClientSaveSerializer, ClientBackgroundInformation, ClientDetailsSerializer
+
+
+#TO BE REMOVED VIA CLEANING UP
+def generate_username():
+    random_prefix = random.randint(10000, 9999999)
+    return "CLT{}".format(random_prefix)
 
 
 class ClientListView(APIView):
@@ -22,10 +29,11 @@ class ClientListView(APIView):
 
     def post(self, request, format=None):
         serializer = ClientCreateSerializer(data=request.data)
+        print(serializer)
         if serializer.is_valid():
             #create user instance first
             user_data = {
-                'username':'A010',
+                'username':generate_username(),
                 'first_name':serializer.data['first_name'],
                 'last_name':serializer.data['last_name'],
                 'email':serializer.data['email_address'],
@@ -33,9 +41,12 @@ class ClientListView(APIView):
                 'phone_number':serializer.data['phone_number'],
             }
 
+
             user_creation = UserSerializer(data=user_data)
             user_creation.is_valid(raise_exception=True)
             user_creation.save()
+
+            print(user_creation.data)
 
             # user_instance = User.objects.get(pk=user_creation.data['id'])
 
@@ -65,13 +76,13 @@ class ClientListView(APIView):
             client_creation.save(added_by=request.user)
 
             #create a background information record
-            client_background = {
-                'related_client': client_creation.data['id']
-            }
+            # client_background = {
+            #     'related_client': client_creation.data['id']
+            # }
 
-            client_backgound_creation = ClientSaveSerializer(data=client_background)
-            client_backgound_creation.is_valid(raise_exception=True)
-            client_backgound_creation.save()
+            # client_backgound_creation = ClientSaveSerializer(data=client_background)
+            # client_backgound_creation.is_valid(raise_exception=True)
+            # client_backgound_creation.save()
 
             return Response({"status":201, "data":client_creation.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
