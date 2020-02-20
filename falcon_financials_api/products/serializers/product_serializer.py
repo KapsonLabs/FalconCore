@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounts.serializers.client_serializer import ClientDetailsSerializer
+from accounts.serializers.client_serializer import ClientDetailsSerializer, ClientShortDetailsSerializer
 from ..models import Product, ProductFeesLevied, ProductSubscriptions
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -8,7 +8,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Product
-        fields = ('id', 'product_name', 'product_description', 'product_category')
+        fields = ('id', 'product_name', 'product_code', 'product_description', 'product_category')
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
     """
@@ -16,7 +16,16 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Product
-        fields = ('id', 'product_name', 'product_description', 'product_category', 'created_by', 'date_created')
+        fields = ('id', 'product_name', 'product_code' ,'product_description', 'product_category', 'created_by', 'date_created')
+
+class ProductShortDetailsSerializer(serializers.ModelSerializer):
+    """
+    SHort Details serializer for product
+    """
+    class Meta:
+        model = Product
+        fields = ('product_name', 'product_code') 
+
 
 class ProductSubscriptionCreateSerializer(serializers.Serializer):
     related_client  = serializers.IntegerField()
@@ -33,6 +42,13 @@ class ProductSubscriptionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductSubscriptions
         fields = ('related_product_subscription', 'related_client_subscription', 'account_number', 'added_by', 'subscription_status', 'date_subscribed')
+
+class ProductSubscriptionShortDetailSerializer(serializers.ModelSerializer):
+    related_product_subscription = ProductShortDetailsSerializer(read_only=True)
+    related_client_subscription = ClientShortDetailsSerializer(read_only=True)
+    class Meta:
+        model = ProductSubscriptions
+        fields = ('related_product_subscription', 'related_client_subscription', 'account_number')
 
 
 class ProductFeesCreateSerializer(serializers.Serializer):
@@ -57,3 +73,6 @@ class ProductFeesDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductFeesLevied
         fields = ('related_product_fees', 'fee_category', 'percentage_levied', 'fee_levied', 'frequency_levied', 'fees_added_by', 'added_on')
+
+class ClientProductSubscriptionSerializer(serializers.Serializer):
+    client_account_number   =   serializers.CharField(max_length=200)

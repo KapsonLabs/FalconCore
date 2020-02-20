@@ -5,6 +5,7 @@ from .choices import PAYMENT_PERIOD
 class Product(models.Model):
     product_name            =   models.CharField(max_length=250) 
     product_description     =   models.CharField(max_length=250) 
+    product_code            =   models.CharField(max_length=250, null=True, blank=True)
     product_category        =   models.IntegerField()  #0-savings 1-loans
     created_by              =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_creator')
     date_created            =   models.DateTimeField(auto_now_add=True)

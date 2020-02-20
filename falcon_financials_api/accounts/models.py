@@ -31,6 +31,7 @@ class Client(models.Model):
     related_user        =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='client')
     added_by            =   models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_creator')
     client_type         =   models.IntegerField()
+    client_account_number   =   models.CharField(max_length=250, null=True, blank=True)
     client_branch       =   models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_branch')
     registration_date   =   models.DateField(null=True, blank=True)
     sex                 =   models.CharField(max_length=12, null=True, blank=True)

@@ -34,7 +34,7 @@ class ClientSaveSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Client
-        fields = ('id', 'related_user', 'client_type', 'client_branch', 'registration_date', 'sex', 'address', 'area_parish', 'area_village', 'area_county', 'area_subcounty', 'area_district', 'bank_verification_no', 'national_id_number', 'signature_mandate', 'signatory_loans_officer', 'signatory_savings_officer', 'signatory_sales_officer')
+        fields = ('id', 'related_user', 'client_account_number', 'client_type', 'client_branch', 'registration_date', 'sex', 'address', 'area_parish', 'area_village', 'area_county', 'area_subcounty', 'area_district', 'bank_verification_no', 'national_id_number', 'signature_mandate', 'signatory_loans_officer', 'signatory_savings_officer', 'signatory_sales_officer')
 
 class ClientDetailsSerializer(serializers.ModelSerializer):
     """
@@ -44,7 +44,16 @@ class ClientDetailsSerializer(serializers.ModelSerializer):
     added_by     = UserSerializer(read_only=True)
     class Meta:
         model = Client
-        fields = ('id', 'related_user', 'added_by', 'client_type', 'client_branch', 'registration_date', 'sex', 'address', 'area_parish', 'area_village', 'area_county', 'area_subcounty', 'area_district', 'bank_verification_no', 'national_id_number', 'signature_mandate', 'signatory_loans_officer', 'signatory_savings_officer', 'signatory_sales_officer')
+        fields = ('id', 'related_user', 'added_by', 'client_type', 'client_account_number', 'client_branch', 'registration_date', 'sex', 'address', 'area_parish', 'area_village', 'area_county', 'area_subcounty', 'area_district', 'bank_verification_no', 'national_id_number', 'signature_mandate', 'signatory_loans_officer', 'signatory_savings_officer', 'signatory_sales_officer')
+
+class ClientShortDetailsSerializer(serializers.ModelSerializer):
+    """
+    Short details for client serializer
+    """
+    related_user = UserSerializer(read_only=True)
+    class Meta:
+        model = Client
+        fields = ('id', 'related_user', 'client_account_number')
 
 class ClientBackgroundInformationSerializer(serializers.ModelSerializer):
     """
