@@ -5,7 +5,8 @@ from rest_framework import permissions
 from django.db.models import Q
 
 from ..models import Product, ProductSubscriptions, ProductFeesLevied
-from ..serializers.product_serializer import ProductCreateSerializer, ProductDetailsSerializer, ProductSubscriptionCreateSerializer, ProductSubscriptionSaveSerializer, ProductFeesCreateSerializer, ProductFeesSaveSerializer, ProductFeesDetailSerializer, ProductSubscriptionDetailSerializer
+from accounts.models import Client
+from ..serializers.product_serializer import ProductCreateSerializer, ProductDetailsSerializer, ProductSubscriptionCreateSerializer, ProductSubscriptionSaveSerializer, ProductFeesCreateSerializer, ProductFeesSaveSerializer, ProductFeesDetailSerializer, ProductSubscriptionDetailSerializer, ClientProductSubscriptionSerializer, ProductSubscriptionShortDetailSerializer
 
 from ..serializers.savings_serializer import SavingsCreateSerializer
 
@@ -24,8 +25,12 @@ class ProductListView(APIView):
     def post(self, request, format=None):
         serializer = ProductCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(created_by=request.user)
-            return Response({"status":201, "data":serializer.data}, status=status.HTTP_201_CREATED)
+            try:
+                existing_product_code = Product.objects.get(product_code=serializer.validated_data['product_code'])
+                return Response({"status":400, "error":"Duplicate product code"}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                serializer.save(created_by=request.user)
+                return Response({"status":201, "data":serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -113,4 +118,23 @@ class ProductFeesListView(APIView):
 
             return Response({"status":201, "data":product_fees_creation.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProductClientSubscriptions(APIView):
+    """
+    Interactions between client and product
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def post(self, request, format=None):
+        serializer = ClientProductSubscriptionSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                related_client = Client.objects.get(client_account_number=serializer.data['client_account_number'])
+                related_subscriptions = ProductSubscriptionShortDetailSerializer(ProductSubscriptions.objects.filter(related_client_subscription=related_client.id), many=True)
+                return Response({"status":200, "data":related_subscriptions.data}, status=status.HTTP_200_OK)
+            except:
+                return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 

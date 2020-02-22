@@ -9,6 +9,7 @@ from rest_framework import permissions
 from ..models import User, Client
 from ..serializers.user_serializer import UserSerializer
 from ..serializers.client_serializer import ClientCreateSerializer, ClientSaveSerializer, ClientBackgroundInformation, ClientDetailsSerializer
+from ..helpers import client_create_account_number
 
 
 #TO BE REMOVED VIA CLEANING UP
@@ -55,6 +56,7 @@ class ClientListView(APIView):
                 'related_user':         user_creation.data['id'],
                 'client_type':          serializer.data['client_type'],    
                 'client_branch':        serializer.data['client_branch'],
+                'client_account_number': client_create_account_number(),
                 'registration_date':    serializer.data['registration_date'],
                 'sex':                  serializer.data['sex'],    
                 'address':              serializer.data['address'],

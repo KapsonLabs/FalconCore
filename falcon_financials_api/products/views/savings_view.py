@@ -115,10 +115,12 @@ class SavingHistoryListView(APIView):
                     savings_account = Savings.objects.get(related_savings_subscription=product_subscribed_to.pk)
 
                     if(serializer.data['method'] == 0):
-                        pass
+                        savings_deposits = SavingsDepositSaveSerializer(SavingsDeposits.objects.filter(related_savings_account=savings_account.id), many=True)
+                        return Response({"status":200, "data":savings_deposits.data}, status=status.HTTP_200_OK)
 
                     if(serializer.data['method'] == 1):
-                        pass
+                        savings_withdrawals = SavingsWithdrawSaveSerializer(SavingsWithdrawal.objects.filter(related_savings_account_withdrawal=savings_account.id), many=True)
+                        return Response({"status":200, "data":savings_withdrawals.data}, status=status.HTTP_200_OK)
 
                     if(serializer.data['method'] == 2):
 
