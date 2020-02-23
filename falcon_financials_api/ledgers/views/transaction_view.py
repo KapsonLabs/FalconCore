@@ -5,7 +5,7 @@ from rest_framework import permissions
 from django.db.models import Q
 
 from ..models import Transaction
-from ..serializers.transaction_seriaizer import TransactionCreateSerializer
+from ..serializers.transaction_seriaizer import TransactionCreateSerializer, TransactionDetailSerializer
 
 
 class TransactionListView(APIView):
@@ -15,5 +15,5 @@ class TransactionListView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request, format=None):
-        serializer = TransactionCreateSerializer(Transaction.objects.all(), many=True)
+        serializer = TransactionDetailSerializer(Transaction.objects.all(), many=True)
         return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
