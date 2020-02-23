@@ -24,7 +24,7 @@ class ProductShortDetailsSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Product
-        fields = ('product_name', 'product_code') 
+        fields = ('product_name', 'product_code', 'product_category') 
 
 
 class ProductSubscriptionCreateSerializer(serializers.Serializer):
