@@ -5,7 +5,7 @@ from rest_framework import permissions
 from django.db.models import Q
 
 from ..models import TrialBalanceLedger
-from ..serializers.trial_balance_serializer import TrialBalanceCreateSerializer
+from ..serializers.trial_balance_serializer import TrialBalanceCreateSerializer, TrialBalanceDetailSerializer
 
 
 class TrialBalanceListView(APIView):
@@ -15,5 +15,5 @@ class TrialBalanceListView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request, format=None):
-        serializer = TrialBalanceCreateSerializer(TrialBalanceLedger.objects.all(), many=True)
+        serializer = TrialBalanceDetailSerializer(TrialBalanceLedger.objects.all(), many=True)
         return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
