@@ -4,13 +4,79 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.models import Q, F
 
-from ..models import Product, ProductSubscriptions, ProductFeesLevied, Loans, LoansGuarantors, LoansDisbursements
-from ..serializers.loans_serializer import LoanSaveSerializer, LoanCreateSerializer, LoanGuarantorsSaveSerializer
+from ..models import Product, ProductSubscriptions, ProductFeesLevied, Loans, LoansGuarantors, LoansDisbursements, LoanType, LoanTypeFeesApplicable
+from ..serializers.loans_serializer import LoanSaveSerializer, LoanCreateSerializer, LoanGuarantorsSaveSerializer, LoanTypeSaveSerializer, LoanTypeFeesSaveSerializer, LoanTypeCreateSerializer
 
 from ..serializers.savings_serializer import SavingsCreateSerializer
 
 from ledgers.procedures.transaction_procedures import TransactionProcedure
 
+
+class LoanTypeListView(APIView):
+    """
+    List all loan types and create a loan type.
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, format=None):
+        product_code = self.request.query_params.get('product_code', None)
+        product = Product.objects.get(product_code=product_code)
+        serializer = LoanTypeSaveSerializer(LoanType.objects.filter(related_product=product), many=True)
+        return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
+
+    def post(self, request, format=None):
+        serializer = LoanTypeCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            product_code = self.request.query_params.get('product_code', None)
+            try:
+                product = Product.objects.get(product_code=product_code)
+                try:
+                    existing_loan_type_code = LoanType.objects.get(loan_type_code=serializer.validated_data['loan_type_code'])
+                    return Response({"status":400, "error":"Duplicate loan type code"}, status=status.HTTP_400_BAD_REQUEST)
+                except:
+                    loan_type_serializer = LoanTypeSaveSerializer(data={
+                        "loan_type_name":serializer.validated_data['loan_type_name'],
+                        "loan_type_description":serializer.validated_data['loan_type_description'],
+                        "loan_type_code":serializer.validated_data['loan_type_code'],
+                        "related_product":product.pk,
+                        "loan_type_added_by": request.user.pk
+                    })
+
+                    loan_type_serializer.is_valid(raise_exception=True)
+                    loan_type_serializer.save()
+
+                    #create the loan type fees
+                    try:
+                        for fee in serializer.validated_data['fees']:
+                            
+                            loan_type_fees_serializer = LoanTypeFeesSaveSerializer(data={
+                                "related_loan_type":loan_type_serializer.data['id'],
+                                "related_loan_fee_category":serializer.validated_data['fees'][fee]['loan_fee_category'],
+                                "amount":serializer.validated_data['fees'][fee]['amount'],
+                                "added_by":request.user.pk
+                            })
+                            loan_type_fees_serializer.is_valid(raise_exception=True)
+                            loan_type_fees_serializer.save()
+                    except:
+                        return Response({"status":400, "error":"Fess not being captured"})
+
+                return Response({"status":200, "data":serializer.data}, status=status.HTTP_201_CREATED)
+            except:
+                return Response({"status":400, "error":"Bad product code"}, status=status.HTTP_400_BAD_REQUEST)
+            # return Response({"status":201, "data":serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoanTypeDetailView(APIView):
+    """
+    Retrieve a specific loan type with all it's related fees
+    """
+
+    def get(self, request, format=None):
+        loan_type_code = self.request.query_params.get('loan_type_code', None)
+        loan_type_serializer = LoanTypeSaveSerializer(LoanType.objects.get(loan_type_code=loan_type_code))
+        loan_type_fees_serializer = LoanTypeFeesSaveSerializer(LoanTypeFeesApplicable.objects.filter(related_loan_type=loan_type_serializer.data['id']), many=True)
+        return Response({"status":200, "loan_type":loan_type_serializer.data, "fees":loan_type_fees_serializer.data})
 
 
 class LoanRequestListView(APIView):
@@ -96,7 +162,7 @@ class LoanRequestListView(APIView):
 
 
 
-class SavingHistoryListView(APIView):
+class LoansHistoryListView(APIView):
     """
     List all savings deposits and create a savings deposit.
     """

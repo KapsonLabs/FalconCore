@@ -4,11 +4,13 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.models import Q
 
-from ..models import Product, ProductSubscriptions, ProductFeesLevied
+from ..models import Product, ProductSubscriptions, ProductFeesLevied, LoanType
 from accounts.models import Client
 from ..serializers.product_serializer import ProductCreateSerializer, ProductDetailsSerializer, ProductSubscriptionCreateSerializer, ProductSubscriptionSaveSerializer, ProductFeesCreateSerializer, ProductFeesSaveSerializer, ProductFeesDetailSerializer, ProductSubscriptionDetailSerializer, ClientProductSubscriptionSerializer, ProductSubscriptionShortDetailSerializer
 
 from ..serializers.savings_serializer import SavingsCreateSerializer
+
+from ..serializers.loans_serializer import LoanTypeSaveSerializer
 
 from ..helpers.account_management import create_account_number
 
@@ -30,6 +32,17 @@ class ProductListView(APIView):
                 return Response({"status":400, "error":"Duplicate product code"}, status=status.HTTP_400_BAD_REQUEST)
             except:
                 serializer.save(created_by=request.user)
+                if serializer.data['product_category'] == 1:
+                    #Create a default loan type for the system
+                    default_loan_type_serializer = LoanTypeSaveSerializer(data={
+                        "loan_type_name":"DEFAULT",
+                        "loan_type_description":"Default loan type created by the system",
+                        "loan_type_code":"DEF0001",
+                        "loan_type_added_by": request.user.pk,
+                        "related_product": serializer.data['id']
+                    })
+                    default_loan_type_serializer.is_valid(raise_exception=True)
+                    default_loan_type_serializer.save()
                 return Response({"status":201, "data":serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
