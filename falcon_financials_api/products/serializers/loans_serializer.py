@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from accounts.serializers.client_serializer import ClientDetailsSerializer
 from accounts.serializers.user_serializer import UserDetailsSerializer
-from ..models import Loans, LoansGuarantors, LoansDisbursements, LoansDisbursementFeesLevied, LoansRepayments, LoansRepaymentsFeesLevied, LoanType, LoanTypeFeesApplicable
+from .product_serializer import ProductSubscriptionDetailSerializer
+from ..models import Loans, LoansGuarantors, LoansDisbursements, LoansDisbursementFeesLevied, LoansRepayments, LoansRepaymentsFeesLevied, LoanType, LoanTypeFeesApplicable, LoansDisbursements
 
 
 class LoanTypeCreateSerializer(serializers.Serializer):
@@ -32,16 +33,24 @@ class LoanSaveSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Loans
-        fields = ('related_loan_subscription', 'loan_amount', 'loan_received_by', 'status', 'payment_duration', 'payment_period')
+        fields = ('id', 'related_loan_subscription', 'related_loan_type_loans', 'loan_amount', 'loan_received_by', 'payment_duration', 'payment_period')
+
+class LoanDetailsSerializer(serializers.ModelSerializer):
+    """
+    Details serializer for loans
+    """
+    related_loan_subscription = ProductSubscriptionDetailSerializer(read_only=True)
+    class Meta:
+        model = Loans
+        fields = '__all__'
 
 class LoanCreateSerializer(serializers.Serializer):
     account_number     =   serializers.CharField(max_length=250)
+    loan_type          =   serializers.IntegerField()
     amount             =   serializers.IntegerField()
     payment_duration   =   serializers.IntegerField()
     payment_period     =   serializers.CharField(max_length=250)
-    guarantor1         =   serializers.IntegerField() 
-    guarantor2         =   serializers.IntegerField()
-    guarantor3         =   serializers.IntegerField()
+    guarantors         =   serializers.DictField()
 
 
 class LoanGuarantorsSaveSerializer(serializers.ModelSerializer):
@@ -51,4 +60,11 @@ class LoanGuarantorsSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoansGuarantors
         fields = ('related_loan_guaranted', 'guarantor')
+
+class LoanApproveSerializer(serializers.Serializer):
+    action          = serializers.CharField(max_length=10)
+
+class LoansDisbursementSerializer(serializers.ModelSerializer):
+    model = LoansDisbursements
+    fields = ('related_loan_disbursement' ,'amount_disbursed', 'disbursement_method', 'disbursement_cleared_by', 'disbursed_by')
 

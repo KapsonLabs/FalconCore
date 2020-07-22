@@ -1,7 +1,7 @@
 from django.urls import path, include
 from .views.product_view import ProductListView, ProductSubscriptionListView, ProductFeesListView, ProductClientSubscriptions
 from .views.savings_view import SavingDepositListView, SavingHistoryListView
-from .views.loans_view import LoanRequestListView, LoanTypeListView, LoanTypeDetailView
+from .views.loans_view import LoanRequestListView, LoanTypeListView, LoanTypeDetailView, LoansSpecificView, LoansDisbursementView
 
 urlpatterns = [
     path('products', ProductListView.as_view(), name="products"),
@@ -10,7 +10,9 @@ urlpatterns = [
     path('products/savings', SavingDepositListView.as_view(), name="savings"),
     path('products/savings/history', SavingHistoryListView.as_view(), name="savings_history"),
     path('products/client_subscriptions', ProductClientSubscriptions.as_view(), name="client_subscriptions"),
-    path('products/<int:pk>/loans', LoanRequestListView.as_view(), name='loans_request'), 
+    path('products/loans', LoanRequestListView.as_view(), name='loans_request'), 
+    path('products/loans/<int:pk>', LoansSpecificView.as_view(), name='loans_specific'),
     path('products/loans/types', LoanTypeListView.as_view(), name='loan_types'),
     path('products/loans/types/detail', LoanTypeDetailView.as_view(), name='loan_type_detail'),
+    path('products/loans/<int:pk>/disburse', LoansDisbursementView.as_view(), name='loans_disbursement'),
 ]
