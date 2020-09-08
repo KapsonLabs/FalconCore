@@ -15,10 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('accounts.urls'), name="accounts-routes"),
     path('api/v1/', include('products.urls'), name="products-routes"),
     path('api/v1/', include('ledgers.urls'), name="ledgers-routes"),
+    path('api/v1/docs/', get_schema_view(title="Falkon API", description="Falkon API Documentation"), name='openapi-schema'),
 ]

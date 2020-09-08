@@ -7,7 +7,6 @@ from django.db.models import Q
 from ..models import Transaction
 from ..serializers.transaction_seriaizer import TransactionCreateSerializer, TransactionDetailSerializer
 
-
 class TransactionListView(APIView):
     """
     List all transactions

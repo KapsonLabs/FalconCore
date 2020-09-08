@@ -68,7 +68,10 @@ class SavingsWithdrawal(models.Model):
     date_withdrawn                      =   models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "{} withdrawn from {} ".format(self.amount_withdrawn, self.related_savings_account.related_subscription.account_number)
+        # Raises error 'SavingsWithdrawal' object has no attribute 'related_savings_account'
+        #return "{} withdrawn from {} ".format(self.amount_withdrawn, self.related_savings_account.related_subscription.account_number)
+        
+        return "{} withdrawn from".format(self.amount_withdrawn)
 
 class LoanType(models.Model):
     loan_type_name          = models.CharField(max_length=250)
@@ -77,7 +80,13 @@ class LoanType(models.Model):
     related_product         = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="loan_type_related_product")
     loan_type_added_by      = models.ForeignKey(User, on_delete=models.CASCADE, related_name="loan_type_creator")
     loan_type_added_on      = models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoanTypeFeesApplicable(models.Model):
     related_loan_type           = models.ForeignKey(LoanType, on_delete=models.CASCADE, related_name="related_loan_fee")
     related_loan_fee_category   = models.IntegerField()  #0-flat_fee 1-Percentage
@@ -85,7 +94,12 @@ class LoanTypeFeesApplicable(models.Model):
     date_added                  = models.DateTimeField(auto_now_add=True)
     added_by                    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="loan_type_fee_creator")
 
-
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class Loans(models.Model):
     related_loan_subscription    =   models.ForeignKey(ProductSubscriptions, on_delete=models.CASCADE, related_name="related_loan_product_subscription")
     related_loan_type_loans      =   models.ForeignKey(LoanType, on_delete=models.CASCADE, related_name="related_loan_type_loans")
@@ -98,12 +112,24 @@ class Loans(models.Model):
     date_cleared                 =   models.DateTimeField(auto_now_add=False, blank=True, null=True)
     date_declined                =   models.DateTimeField(auto_now_add=False, blank=True, null=True) 
     date_requested               =   models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoansGuarantors(models.Model):
     related_loan_guaranted  =   models.ForeignKey(Loans, on_delete=models.CASCADE, related_name="related_loan_guarantors")
     guarantor               =   models.ForeignKey(Client, on_delete=models.CASCADE, related_name="loans_guarantor")
     date_added              =   models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoansDisbursements(models.Model):
     related_loan_disbursement  =   models.ForeignKey(Loans, on_delete=models.CASCADE, related_name="related_loan_disbursements")
     amount_disbursed        =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
@@ -115,23 +141,46 @@ class LoansDisbursements(models.Model):
     date_completed          =   models.DateTimeField(auto_now_add=False, blank=True, null=True)
     date_extended           =   models.DateTimeField(auto_now_add=False, blank=True, null=True)
     date_written_off        =   models.DateTimeField(auto_now_add=False, blank=True, null=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoansDisbursementFeesLevied(models.Model):
     disbursement_related_loan   =   models.ForeignKey(LoansDisbursements, on_delete=models.CASCADE, related_name="related_loan_disbursement_fees")
     disbursement_related_fee    =   models.ForeignKey(ProductFeesLevied, on_delete=models.CASCADE, related_name="related_product_fees_levied")
     amount_levied               =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     date_levied                 =   models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoansRepayments(models.Model):
     related_loan_repayment  =   models.ForeignKey(Loans, on_delete=models.CASCADE, related_name="related_loan_repayments") 
     amount_paid             =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     payment_method          =   models.IntegerField()   #0-counter 1-electonic
     paid_on                 =   models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
+        
 class LoansRepaymentsFeesLevied(models.Model):
     related_repayment_fee   =   models.ForeignKey(LoansRepayments, on_delete=models.CASCADE, related_name="related_loan_repayment_fees")
     related_repayment_fee   =   models.ForeignKey(ProductFeesLevied, on_delete=models.CASCADE, related_name="related_product_repayment_fees_levied")
     amount_levied           =   models.DecimalField(max_digits=20, decimal_places=2, default=0)
     date_levied             =   models.DateTimeField(auto_now_add=True)
-
+    
+    def __str__(self):
+        return "ID {0}".format(str(self.id))
+    
+    class Meta:
+        ordering = ("-id",)
 

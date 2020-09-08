@@ -12,7 +12,7 @@ class ProductLedgerListView(APIView):
     """
     List all product ledgers
     """
-    permission_classes = (permissions.IsAuthenticated, )
+    #permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request, format=None):
         serializer = ProductLedgerDetailSerializer(ProductLedger.objects.all(), many=True)

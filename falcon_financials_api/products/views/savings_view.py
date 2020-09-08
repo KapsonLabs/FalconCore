@@ -5,13 +5,12 @@ from rest_framework import permissions
 from django.db.models import Q, F
 
 from ..models import Product, ProductSubscriptions, ProductFeesLevied, Savings, SavingsDeposits, SavingsWithdrawal
-from ..serializers.savings_serializer import SavingsDepositAndWithdrawCreateSerializer, SavingsDepositSaveSerializer, SavingsWithdrawSaveSerializer, SavingsHistorySerializer
-
+from ..serializers.savings_serializer import (SavingsDepositAndWithdrawCreateSerializer, SavingsDepositSaveSerializer, SavingsWithdrawSaveSerializer, 
+SavingsHistorySerializer
+)
 from ..serializers.savings_serializer import SavingsCreateSerializer
-
 from ledgers.procedures.transaction_procedures import TransactionProcedure
-
-
+import datetime 
 
 class SavingDepositListView(APIView):
     """
@@ -97,8 +96,6 @@ class SavingDepositListView(APIView):
         except:
             return Response({"error":"Invalid account number, Please check the account number"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 class SavingHistoryListView(APIView):
     """
     List all savings deposits and create a savings deposit.
@@ -131,3 +128,95 @@ class SavingHistoryListView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error":"Invalid account number, Please check the account number"}, status=status.HTTP_400_BAD_REQUEST)
+            
+class SavingReportListView(APIView):
+    """
+    List all report deposits and create a savings deposit.
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+    
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            data={"status":200, "data":self.process_saving_report()}            
+            return Response(data)
+        except Exception as e:
+            return Response({"error":True, "msg":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def process_saving_report(self):
+        """
+        Begin processing saving report.
+        """
+        saving_report = []
+        savings = Savings.objects.all()
+        
+        for sav in savings:
+            deposit = SavingsDeposits.objects.filter(related_savings_account=sav)
+            deposit_amount = 0.0
+            
+            if(deposit):
+                
+                # Just incase the saving returns more than one instance
+                if(deposit.count() > 1):
+                    for dep in deposit:
+                        deposit_amount += dep.amount_deposited
+                else:
+                    deposit = deposit.first()
+                    deposit_amount = deposit.amount_deposited
+                    
+            withdrawn = SavingsWithdrawal.objects.filter(related_savings_account_withdrawal=sav)
+            withdrawn_amount = 0.0
+            
+            if(withdrawn):
+                
+                # Just incase the withdrawn returns more than one instance
+                if(withdrawn.count() > 1):
+                    for withd in withdrawn:
+                        withdrawn_amount += withd.amount_withdrawn
+                else:
+                    withdrawn = withdrawn.first()
+                    withdrawn_amount = withdrawn.amount_withdrawn
+                    
+            saving_report.append({
+                "saving_type":sav.related_savings_subscription.related_product_subscription.product_name,
+                "total_amount_deposited":deposit_amount,
+                "total_amount_withdrawn":withdrawn_amount
+                }
+            )
+        return saving_report
+        
+class SavingStatisticsListView(APIView):
+    """
+    Basic statistics for saving.
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+    
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            data={"status":200, "data":self.filter_saving_by_date()}            
+            return Response(data)
+        except Exception as e:
+            return Response({"error":True, "msg":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def filter_saving_by_date(self):
+        """
+        Filters all loan by current year and month
+        """
+        DEFAULT_MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12] # This months don't change
+        DEFAULT_MONTHS_NAME={1:"January", 2:"February", 3:"March", 4:"April", 5:"May", 6:"June", 7:"July", 8:"August",
+                             9:"September", 10:"October", 11:"November", 12:"December"
+                            } # This don't change
+                            
+        YEAR = datetime.datetime.now().year
+        response = []
+        
+        for month in DEFAULT_MONTHS:
+            response.append(
+                {DEFAULT_MONTHS_NAME.get(month):Savings.objects.filter(date_created__year=YEAR, date_created__month=month).count()}
+            )
+        return response 

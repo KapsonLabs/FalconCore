@@ -3,15 +3,89 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from django.db.models import Q, F
+from rest_framework import status
+import datetime 
 
 from ..models import Product, ProductSubscriptions, ProductFeesLevied, Loans, LoansGuarantors, LoansDisbursements, LoanType, LoanTypeFeesApplicable
-from ..serializers.loans_serializer import LoanSaveSerializer, LoanCreateSerializer, LoanGuarantorsSaveSerializer, LoanTypeSaveSerializer, LoanTypeFeesSaveSerializer, LoanTypeCreateSerializer, LoanDetailsSerializer, LoanApproveSerializer, LoansDisbursementSerializer
-
+from ..serializers.loans_serializer import (LoanSaveSerializer, LoanCreateSerializer, LoanGuarantorsSaveSerializer, LoanTypeSaveSerializer, 
+LoanTypeFeesSaveSerializer, LoanTypeCreateSerializer, LoanDetailsSerializer, LoanApproveSerializer, LoansDisbursementSerializer
+)
 from ..serializers.savings_serializer import SavingsCreateSerializer
 
 from ledgers.procedures.transaction_procedures import TransactionProcedure
 
 
+class LoanStatistics(APIView):
+    """
+    Process reports for a particular loans
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            data={"status":200, "data":self.filter_loan_by_date()}            
+            return Response(data)
+        except Exception as e:
+            return Response({"status":400, "error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+    def filter_loan_by_date(self):
+        """
+        Filters all loan by current year and month
+        """
+        DEFAULT_MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12] # This months don't change
+        DEFAULT_MONTHS_NAME={1:"January", 2:"February", 3:"March", 4:"April", 5:"May", 6:"June", 7:"July", 8:"August",
+                             9:"September", 10:"October", 11:"November", 12:"December"
+                            } # This don't change
+                            
+        YEAR = datetime.datetime.now().year
+        response = []
+        
+        for month in DEFAULT_MONTHS:
+            response.append(
+                {DEFAULT_MONTHS_NAME.get(month):Loans.objects.filter(date_requested__year=YEAR, date_requested__month=month).count()}
+            )
+        return response 
+        
+class LoanReports(APIView):
+    """
+    Process reports for a particular loans
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            data={"status":200, "data":self.process_loan_report()}            
+            return Response(data)
+        except Exception as e:
+            return Response({"status":400, "error":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def process_loan_report(self):
+        """
+        Performs basic loan processing
+        """
+        loans = Loans.objects.all()
+        loan_report = []
+        
+        for loan in loans:
+            disembursed = LoansDisbursements.objects.filter(related_loan_disbursement=loan).first()
+            
+            amount_disbursed = 0.0
+            if(disembursed):
+                amount_disbursed = disembursed.amount_disbursed
+                
+            loan_report.append({
+                "loan_type":loan.related_loan_type_loans.loan_type_name,
+                "total_amount_requested":loan.loan_amount,
+                "total_amount_disbursed":amount_disbursed
+            })
+        return loan_report
+        
 class LoanTypeListView(APIView):
     """
     List all loan types and create a loan type.
@@ -19,11 +93,21 @@ class LoanTypeListView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get(self, request, format=None):
-        product_code = self.request.query_params.get('product_code', None)
-        product = Product.objects.get(product_code=product_code)
-        serializer = LoanTypeSaveSerializer(LoanType.objects.filter(related_product=product), many=True)
-        return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
-
+        try:
+            
+            product_code = self.request.query_params.get('product_code', None)
+            product = Product.objects.get(product_code=product_code)
+            serializer = LoanTypeSaveSerializer(LoanType.objects.filter(related_product=product), many=True)
+            return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
+            
+        except Product.DoesNotExist as e:
+            response = {"status":404, "msg":str(e)}
+            return Response(response)
+            
+        except LoanTypeSaveSerializer.DoesNotExist as e:
+            response = {"status":404, "msg":str(e)}
+            return Response(response)
+            
     def post(self, request, format=None):
         serializer = LoanTypeCreateSerializer(data=request.data)
         if serializer.is_valid():
@@ -73,11 +157,16 @@ class LoanTypeDetailView(APIView):
     """
 
     def get(self, request, format=None):
-        loan_type_code = self.request.query_params.get('loan_type_code', None)
-        loan_type_serializer = LoanTypeSaveSerializer(LoanType.objects.get(loan_type_code=loan_type_code))
-        loan_type_fees_serializer = LoanTypeFeesSaveSerializer(LoanTypeFeesApplicable.objects.filter(related_loan_type=loan_type_serializer.data['id']), many=True)
-        return Response({"status":200, "loan_type":loan_type_serializer.data, "fees":loan_type_fees_serializer.data})
-
+        try:
+            
+            loan_type_code = self.request.query_params.get('loan_type_code', None)
+            loan_type_serializer = LoanTypeSaveSerializer(LoanType.objects.get(loan_type_code=loan_type_code))
+            loan_type_fees_serializer = LoanTypeFeesSaveSerializer(LoanTypeFeesApplicable.objects.filter(related_loan_type=loan_type_serializer.data['id']), many=True)
+            return Response({"status":200, "loan_type":loan_type_serializer.data, "fees":loan_type_fees_serializer.data})
+            
+        except LoanType.DoesNotExist as e:
+            response = {"status":404, "msg":str(e)}
+            return Response(response)
 
 class LoanRequestListView(APIView):
     """
@@ -136,9 +225,13 @@ class LoansSpecificView(APIView):
         return Loans.objects.get(pk=pk)
 
     def get(self, request, pk):
-        serializer = LoanDetailsSerializer(self.get_object(pk))
-        return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
-
+        try:
+            serializer = LoanDetailsSerializer(self.get_object(pk))
+            return Response({"status":200, "data":serializer.data}, status=status.HTTP_200_OK)
+        except Loans.DoesNotExist as e:
+            response = {"status":404, "msg":str(e)}
+            return Response(response)
+            
     def post(self, request, pk):
         serializer = LoanApproveSerializer(data=request.data)
         if serializer.is_valid():
@@ -159,6 +252,8 @@ class LoansDisbursementView(APIView):
     """
     Disburse Particular loan
     """
+    permission_classes = (permissions.IsAuthenticated, )
+    
     def post(self, request, pk, format=None):
         serializer = LoansDisbursementSerializer(data=request.data)
         if serializer.is_valid():

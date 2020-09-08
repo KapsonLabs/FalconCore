@@ -6,13 +6,14 @@ from django.db.models import Q
 
 from ..models import Product, ProductSubscriptions, ProductFeesLevied, LoanType
 from accounts.models import Client
-from ..serializers.product_serializer import ProductCreateSerializer, ProductDetailsSerializer, ProductSubscriptionCreateSerializer, ProductSubscriptionSaveSerializer, ProductFeesCreateSerializer, ProductFeesSaveSerializer, ProductFeesDetailSerializer, ProductSubscriptionDetailSerializer, ClientProductSubscriptionSerializer, ProductSubscriptionShortDetailSerializer
-
+from ..serializers.product_serializer import (ProductCreateSerializer, ProductDetailsSerializer, ProductSubscriptionCreateSerializer, 
+ProductSubscriptionSaveSerializer, ProductFeesCreateSerializer, ProductFeesSaveSerializer, ProductFeesDetailSerializer, 
+ProductSubscriptionDetailSerializer, ClientProductSubscriptionSerializer, ProductSubscriptionShortDetailSerializer
+)
 from ..serializers.savings_serializer import SavingsCreateSerializer
-
 from ..serializers.loans_serializer import LoanTypeSaveSerializer
-
 from ..helpers.account_management import create_account_number
+import datetime 
 
 class ProductListView(APIView):
     """
@@ -97,8 +98,10 @@ class ProductSubscriptionListView(APIView):
                         return Response({"status":201, "data":{'product':product_subscription_creation.data, 'savings_account':savings_account_creation.data}}, status=status.HTTP_201_CREATED)
                     else:
                         pass
-                except:
-                    pass 
+                        
+                except Product.DoesNotExist as e:
+                    response = {"status":404, "msg":str(e)}
+                    return Response(response) 
                 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -150,4 +153,85 @@ class ProductClientSubscriptions(APIView):
                 return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ProductSubscriptionReport(APIView):
+    """
+    Processing reportings for subscription
+    """
+    #permission_classes = (permissions.IsAuthenticated, )
+    
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            report = self.generate_product_report()            
+            data={"status":200, "data":report}
+            return Response(data)
+        except Exception as e:
+            return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def generate_product_report(self):
+        """
+        Generates product reports.
+        """
+        report = []
+        product_query = Product.objects.all()
+        for product in product_query:
+            report.append({"product_name":product.product_name, "product_code":product.product_code,
+                            "no_of_subscribers":ProductSubscriptions.objects.filter(related_product_subscription=product).count()
+                        })
+        return report 
+        
+    def post(self, request, format=None):
+        """
+        @POST
+        """
+        try:
+            return Response({})
+        except Exception as e:
+            return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProductSubscriptionStatistics(APIView):
+    """
+    Processing statistics for subscription
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+    
+    def get(self, request, format=None):
+        """
+        @GET
+        """
+        try:
+            data={"status":200, "data":self.filter_subscription_by_date()}            
+            return Response(data)
+        except Exception as e:
+            return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def filter_subscription_by_date(self):
+        """
+        Filters all subscriptions by current year, and month
+        """
+        DEFAULT_MONTHS=[1,2,3,4,5,6,7,8,9,10,11,12] # This months don't change
+        DEFAULT_MONTHS_NAME={1:"January", 2:"February", 3:"March", 4:"April", 5:"May", 6:"June", 7:"July", 8:"August",
+                             9:"September", 10:"October", 11:"November", 12:"December"
+                            } # This don't change
+                            
+        YEAR = datetime.datetime.now().year
+        response = []
+        
+        for month in DEFAULT_MONTHS:
+            response.append(
+                {DEFAULT_MONTHS_NAME.get(month):ProductSubscriptions.objects.filter(date_subscribed__year=YEAR, date_subscribed__month=month).count()}
+            )
+        return response 
+        
+    def post(self, request, format=None):
+        """
+        @POST
+        """
+        try:
+            return Response({})
+        except Exception as e:
+            return Response({"status":400, "error":"Invalid account number"}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import datetime
+import getpass 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '*ld@fyx@ng8chf99#dh5=hju48468a3ap7ky$u+@c@yb!)i&7a'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if(getpass.getuser() == "joel"):
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -38,9 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'products',
-    'ledgers'
+    'ledgers',
+    
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -125,17 +131,24 @@ WSGI_APPLICATION = 'falcon_financials_api.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'falcon_db',
-        'USER': 'djangoappguy',
-        'PASSWORD': 'django1234',
-        'HOST': 'localhost',
-        'PORT': '5432',
+if(getpass.getuser() == "joel"): # Any dev can add his or her username here
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'falcon_db',
+            'USER': 'djangoappguy',
+            'PASSWORD': 'django1234',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 
 # Password validation

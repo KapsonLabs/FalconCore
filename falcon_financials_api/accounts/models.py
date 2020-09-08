@@ -1,5 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
 
 class User(AbstractUser):
     phone_number        =   models.CharField(max_length=12)
@@ -78,3 +82,36 @@ class GroupClients(models.Model):
     def __str__(self):
         return "{} belongs to {} group".format(self.related_client, self.related_group)
 
+
+class NotificationMessages(models.Model):
+    title = models.CharField(blank=True, null=True, max_length=250)
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=False,
+        null=True,
+        related_name='notifications',
+        on_delete=models.CASCADE
+    )
+    message = models.TextField(blank=True, null=True)
+    unread = models.BooleanField(default=True, blank=False)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    content_type = models.ForeignKey(
+        ContentType,
+        help_text="Any content model",
+        on_delete=models.CASCADE, blank=True, null=True
+    )
+    
+    object_id = models.PositiveIntegerField(
+        help_text="Object ID", blank=True, null=True
+    )
+    
+    notification_object = GenericForeignKey(
+        'content_type',
+        'object_id',
+    )
+    
+    def __str__(self):
+        return "{0} {1}".format(self.title, str(self.unread))
+    
+    class Meta:
+        ordering = ("-id",)

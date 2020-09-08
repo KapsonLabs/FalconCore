@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import User, UserDetails
+from ..models import User, UserDetails, NotificationMessages
 from ..serializers.branch_serializer import BranchDetailsSerializer
 
 class UserCreateSerializer(serializers.Serializer):
@@ -55,3 +55,9 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDetails
         fields = ('id', 'related_user', 'created_by' , 'role', 'role_description', 'current_branch', 'previous_branch', 'transfered_on', 'assigned_on')
+        
+class NotificationMessagesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationMessages
+        fields = ('title', 'recipient', 'message', 'unread', 'timestamp')
+
