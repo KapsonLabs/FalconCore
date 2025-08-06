@@ -1,17 +1,20 @@
 from accounts.models import User
 from django.contrib.auth import authenticate, login
-from rest_framework_jwt.settings import api_settings
 from rest_framework import permissions
 from accounts.serializers.token_serializer import TokenSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..serializers.user_serializer import UserDetailsSerializer, UserSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
-# Get the JWT settings, add these lines after the import/from lines
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
 
+    return {
+        'refresh': str(refresh),
+        'token': str(refresh.access_token),
+    }
 
 class LoginView(APIView):
     """
@@ -30,14 +33,8 @@ class LoginView(APIView):
             # login saves the user’s ID in the session,
             # using Django’s session framework.
             login(request, user)
-            token_serializer = TokenSerializer(data={
-                # using drf jwt utility functions to generate a token
-                "token": jwt_encode_handler(
-                    jwt_payload_handler(user)
-                )})
-            token_serializer.is_valid()
-
+            tokens = get_tokens_for_user(user)
             user_serializer = UserSerializer(user)
-            login_data = {"user_data":user_serializer.data, "token_data":token_serializer.data}
+            login_data = {"user_data":user_serializer.data, "token_data":tokens}
             return Response(login_data)
         return Response(status=status.HTTP_404_NOT_FOUND)
